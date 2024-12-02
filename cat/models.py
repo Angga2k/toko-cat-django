@@ -25,6 +25,12 @@ class Purchase(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     purchase_quantity = models.IntegerField()
 
+    def save(self, *args, **kwargs):
+        # Tambahkan jumlah stok produk
+        self.product.stock += self.purchase_quantity
+        self.product.save()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Purchase {self.purchase_id} - {self.purchase_date}"
 
@@ -38,8 +44,16 @@ class DetailPurchase(models.Model):
 
 class Sales(models.Model):
     sales_id = models.AutoField(primary_key=True)
-    sales_date = models.DateTimeField()
+    sales_date = models.DateTimeField(auto_now_add=True)
     sales_quantity = models.IntegerField()
+
+    def save(self, *args, **kwargs):
+        # Kurangi stok produk
+        if self.product.stock < self.sales_quantity:
+            raise ValueError("Stok tidak mencukupi untuk penjualan.")
+        self.product.stock -= self.sales_quantity
+        self.product.save()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Sales {self.sales_id} - {self.sales_date}"
