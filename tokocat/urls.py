@@ -21,7 +21,7 @@ from cat import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('home/', views.index),
-    path('products', views.products),
+    path('products', views.new_products),
     path('purchase/new/', views.create_purchase, name='create_purchase'),
 
 ]

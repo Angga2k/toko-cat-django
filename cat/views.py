@@ -1,7 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from . import templates
+from . import models
 from .forms import PurchaseForm, SalesForm
+from django.contrib import messages
 
 # Create your views here.
 
@@ -17,7 +19,7 @@ def new_products(request):
     return render(request, 'products/products.html')
 
 def existed_products(request) :
-    return render(request, 'products/existed_products.html')
+    return render(request, 'products/new_products.html')
 
 def product_create(request):
     if request.method == 'POST':
@@ -26,7 +28,7 @@ def product_create(request):
         price = request.POST.get('price')
         stock = request.POST.get('stock')
         if product_name and volume and price and stock:
-            Product.objects.create(
+            models.Product.objects.create(
                 product_name=product_name,
                 volume=int(volume),
                 price=int(price),
@@ -40,7 +42,7 @@ def product_create(request):
 
 # Update Product
 def product_update(request, pk):
-    product = get_object_or_404(Product, pk=pk)
+    product = get_object_or_404(models.Product, pk=pk)
     if request.method == 'POST':
         product.product_name = request.POST.get('product_name')
         product.volume = request.POST.get('volume')
@@ -56,7 +58,7 @@ def product_update(request, pk):
 
 # Delete Product
 def product_delete(request, pk):
-    product = get_object_or_404(Product, pk=pk)
+    product = get_object_or_404(models.Product, pk=pk)
     if request.method == 'POST':
         product.delete()
         messages.success(request, "Product deleted successfully!")
