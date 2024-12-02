@@ -15,10 +15,10 @@ def index(request):
 
     return render(request, 'test.html', context)
 
-def new_products(request):
+def existed_products(request):
     return render(request, 'products/products.html')
 
-def existed_products(request) :
+def new_products(request) :
     return render(request, 'products/new_products.html')
 
 def product_create(request):

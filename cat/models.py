@@ -7,6 +7,7 @@ class Product(models.Model):
     volume = models.IntegerField()
     price = models.IntegerField()
     stock = models.IntegerField()
+    safety_stock = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return self.product_name
