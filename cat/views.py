@@ -11,3 +11,6 @@ def index(request):
     }
 
     return render(request, 'test.html', context)
+
+def products(request):
+    return render(request, 'products/products.html')
