@@ -49,7 +49,6 @@ class Sales(models.Model):
     sales_quantity = models.IntegerField()
 
     def save(self, *args, **kwargs):
-        # Kurangi stok produk
         if self.product.stock < self.sales_quantity:
             raise ValueError("Stok tidak mencukupi untuk penjualan.")
         self.product.stock -= self.sales_quantity

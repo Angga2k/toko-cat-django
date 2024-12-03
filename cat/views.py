@@ -4,6 +4,8 @@ from . import templates
 from . import models
 from .forms import PurchaseForm, SalesForm
 from django.contrib import messages
+from django.db import transaction
+from datetime import datetime
 
 # Create your views here.
 
@@ -27,12 +29,14 @@ def product_create(request):
         volume = request.POST.get('volume')
         price = request.POST.get('price')
         stock = request.POST.get('stock')
+        safety_stock = request.POST.get('safety_stock')
         if product_name and volume and price and stock:
             models.Product.objects.create(
                 product_name=product_name,
                 volume=int(volume),
                 price=int(price),
                 stock=int(stock),
+                safety_stock=int(safety_stock)
             )
             messages.success(request, "Product created successfully!")
             return redirect('product_list')
@@ -40,52 +44,83 @@ def product_create(request):
             messages.error(request, "All fields are required.")
     return render(request, 'products/product_form.html', {'form_action': 'Create'})
 
-# Update Product
-def product_update(request, pk):
-    product = get_object_or_404(models.Product, pk=pk)
+def product_update_stock(request, pk):
+    product = get_object_or_404(models.Product, pk=pk)  # Ambil produk berdasarkan primary key
+    suppliers = Supplier.objects.all()
     if request.method == 'POST':
-        product.product_name = request.POST.get('product_name')
-        product.volume = request.POST.get('volume')
-        product.price = request.POST.get('price')
-        product.stock = request.POST.get('stock')
-        if product.product_name and product.volume and product.price and product.stock:
+        purchase_quantity = request.POST.get('purchase_quantity')
+        supplier_id = request.POST.get('supplier')
+        
+        # Validasi input
+        if purchase_quantity and int(purchase_quantity) > 0 and supplier_id:
+            supplier = get_object_or_404(models.Supplier, pk=supplier_id)  # Ambil supplier berdasarkan ID
+            
+            # Tambahkan stok produk
+            product.stock += int(purchase_quantity)
             product.save()
-            messages.success(request, "Product updated successfully!")
+            
+            # Simpan data pembelian ke tabel Purchase
+            models.Purchase.objects.create(
+                purchase_date=datetime.now(),
+                supplier=supplier,
+                product=product,
+                purchase_quantity=int(purchase_quantity)
+            )
+            
+            messages.success(request, f"Stock for {product.product_name} updated successfully! Purchase recorded.")
             return redirect('product_list')
         else:
-            messages.error(request, "All fields are required.")
-    return render(request, 'products/product_form.html', {'product': product, 'form_action': 'Update'})
-
-# Delete Product
-def product_delete(request, pk):
-    product = get_object_or_404(models.Product, pk=pk)
-    if request.method == 'POST':
-        product.delete()
-        messages.success(request, "Product deleted successfully!")
-        return redirect('product_list')
-    return render(request, 'products/product_confirm_delete.html', {'product': product})
-
-def create_purchase(request):
-    if request.method == 'POST':
-        form = PurchaseForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Pembelian berhasil dicatat!")
-            return redirect('dashboard')
-    else:
-        form = PurchaseForm()
-    return render(request, 'purchase/purchase.html', {'form': form})
+            messages.error(request, "All fields are required and purchase quantity must be a positive integer.")
+    
+    return render(request, 'products/product_update_stock.html', {'product': product, 'suppliers': suppliers})
 
 def create_sales(request):
     if request.method == 'POST':
-        form = SalesForm(request.POST)
-        if form.is_valid():
-            try:
-                form.save()
-                messages.success(request, "Penjualan berhasil dicatat!")
+        product_id = request.POST.get('product')
+        quantity = request.POST.get('quantity')  # Mendapatkan jumlah produk
+        
+        # Validasi input
+        if not product_id or not quantity:
+            messages.error(request, "Data produk atau jumlah tidak valid.")
+            return redirect('create_sales')
+
+        try:
+            quantity = int(quantity)
+            if quantity <= 0:
+                raise ValueError("Jumlah produk harus lebih dari nol.")
+
+            # Mulai transaksi database
+            with transaction.atomic():
+                # Dapatkan produk
+                product = get_object_or_404(models.Product, pk=product_id)
+
+                # Validasi stok
+                if product.stock < quantity:
+                    raise ValueError(f"Stok tidak mencukupi untuk produk {product.name}.")
+
+                # Buat catatan di Sales
+                sales = models.Sales.objects.create(
+                    sales_date=datetime.now(),
+                    sales_quantity=quantity,  # Jumlah produk
+                )
+
+                # Buat detail penjualan
+                models.DetailSales.objects.create(
+                    sales=sales,
+                    product=product,
+                    quantity=quantity  # Tambahkan jumlah produk di detail
+                )
+
+                # Perbarui stok produk
+                product.stock -= quantity
+                product.save()
+
+                messages.success(request, "Penjualan berhasil dicatat dan stok diperbarui!")
                 return redirect('dashboard')
-            except ValueError as e:
-                messages.error(request, str(e))
-    else:
-        form = SalesForm()
-    return render(request, 'inventory/sales_form.html', {'form': form})
+        except ValueError as ve:
+            messages.error(request, str(ve))
+        except Exception as e:
+            messages.error(request, f"Terjadi kesalahan: {str(e)}")
+
+    products = models.Product.objects.all()
+    return render(request, 'inventory/sales_form.html', {'products': products})
