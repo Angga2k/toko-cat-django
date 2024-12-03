@@ -12,30 +12,31 @@
                 <div class="input-group input-group-sm mb-3 row">
                     <label class="mb-2" for="product-name">Product Name: </label>
                     <div class="input-group">
-                        <input type="text" id="product-name" class="form-control border shadow-md" aria-label="Product Name" aria-describedby="inputGroup-sizing-sm">
+                        <select id="product-name" class="form-control border shadow-md" aria-label="Product Name"></select>
                     </div>
                 </div>
             </div>
-        
+            
             <div class="col-md-6">
                 <div class="input-group input-group-sm mb-3 row">
                     <label class="mb-2" for="product-volume">Product Volume: </label>
                     <div class="input-group">
-                        <input type="number" id="product-volume" class="form-control border shadow-md" aria-label="Product Name Right" aria-describedby="inputGroup-sizing-sm">
+                        <input type="number" id="product-volume" class="form-control border shadow-md" readonly disabled>
                         <span class="input-group-text">L</span>
                     </div>
                 </div>
             </div>
-
+            
             <div class="col-md-6">
                 <div class="input-group input-group-sm mb-3 row">
-                    <label class="mb-2" for="product-volume">Product Price: </label>
+                    <label class="mb-2" for="product-price">Product Price: </label>
                     <div class="input-group">
                         <span class="input-group-text">Rp</span>
-                        <input type="number" id="product-volume" class="form-control border shadow-md" aria-label="Product Name Right" aria-describedby="inputGroup-sizing-sm">
+                        <input type="number" id="product-price" class="form-control border shadow-md" readonly disabled>
                     </div>
                 </div>
             </div>
+            
             <div class="col-md-6">
                 <div class="input-group input-group-sm mb-3 row">
                     <label class="mb-2" for="product-volume">Quantity: </label>
@@ -47,15 +48,23 @@
             
             <div class="col-md-6">
                 <div class="input-group input-group-sm mb-3 row">
-                    <label class="mb-2" for="product-volume">Supplier: </label>
+                    <label class="mb-2" for="supplier">Supplier: </label>
                     <div class="input-group">
-                        <input type="text" id="product-volume" class="form-control border shadow-md" aria-label="Product Name Right" aria-describedby="inputGroup-sizing-sm">
+                        <select id="supplier" class="form-control border shadow-md" required>
+                            <option value="">Select a Supplier</option>
+                            {% for supplier in suppliers %}
+                            <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
             </div>
 
             <div class="col-12">
-                <button type="button" class="btn btn-primary btn-lg">Buy</button>
+                <form action="{% url 'product_update_stock' pk=product.pk %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-lg">Update Stock</button>
+                </form>
             </div>
         </div>
     </div>
@@ -72,7 +81,6 @@
                             <th>Product Volume (L)</th>
                             <th>Product Price (Rp)</th>
                             <th>Product Stock</th>
-                            <th>Stock</th>
                             <th>Safety Stock</th>
                         </tr>
                     </thead>
@@ -97,23 +105,69 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.datatables.net/2.1.8/js/dataTables.js"></script>
-<script src="https://cdn.datatables.net/2.1.8/css/dataTables.bootstrap5.css"></script>
+<!-- Import jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- Import Select2 -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- Import DataTables -->
+<script src="https://cdn.datatables.net/2.1.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/2.1.8/js/dataTables.bootstrap5.min.js"></script>
+
+
 <script>
     $(document).ready(function() {
         $('#product_id').DataTable({
             // Opsi tambahan bisa ditambahkan di sini
             "paging": true,
-            "searching": true,
             "ordering": true,
             "info": true,
             "lengthChange": true,
-            "pageLength": 10 // Jumlah baris per halaman
+            "pageLength": 5 // Jumlah baris per halaman
         });
     });
 
-    // new DataTable('TokoCat')
+    $('#product-name').select2({
+        ajax: {
+            url: "/api/products/",
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return {
+                    term: params.term // Kirim parameter pencarian
+                };
+            },
+            processResults: function(data) {
+                console.log(data);  // Log respons API
+    
+                if (Array.isArray(data.results)) {
+                    return {
+                        results: data.results.map(item => ({
+                            id: item.id,
+                            text: item.text,
+                            volume: item.volume,
+                            price: item.price
+                        }))
+                    };
+                } else {
+                    return { results: [] }; 
+                }
+            },
+            cache: false
+        },
+        placeholder: "Select a product",
+        minimumInputLength: 1
+    });
+
+    $('#product-name').on('select2:select', function(e) {
+        var selectedProduct = e.params.data;
+        console.log('Selected Product:', selectedProduct);
+
+        // Update input volume dan price dengan data produk yang dipilih
+        $('#product-volume').val(selectedProduct.volume);  // Update volume
+        $('#product-price').val(selectedProduct.price);    // Update price
+    });
+
 </script>
 {% endblock content %}

@@ -21,8 +21,9 @@ from cat import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('home/', views.index),
-    path('products', views.existed_products, name='products'),
-    path('new_products', views.new_products, name='new_products'),
-    path('products/<int:pk>/update-stock/', views.product_update_stock, name='product_update_stock'),
-    path('sales/create/', views.create_sales, name='create_sales')
+    path('products/', views.existed_products, name='products'),
+    path('new_products/', views.new_products, name='new_products'),
+    path('update_products/<int:pk>', views.product_update_stock, name='product_update_stock'),
+    path('sales/create/', views.create_sales, name='create_sales'),
+    path('api/products/', views.product_list_api, name='product_list_api'),
 ]

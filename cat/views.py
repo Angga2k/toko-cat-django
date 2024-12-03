@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from . import templates
 from . import models
 from .forms import PurchaseForm, SalesForm
 from django.contrib import messages
 from django.db import transaction
 from datetime import datetime
+from django.db.models import Q
 
 # Create your views here.
 
@@ -18,10 +19,34 @@ def index(request):
     return render(request, 'test.html', context)
 
 def existed_products(request):
-    return render(request, 'products/products.html')
+    products = models.Product.objects.all()
+    context = {
+        'products': products
+    }
+    return render(request, 'products/products.html', context)
 
 def new_products(request) :
     return render(request, 'products/new_products.html')
+
+def product_list_api(request):
+    term = request.GET.get('term', '')  # Ambil parameter pencarian
+    products = models.Product.objects.filter(product_name__icontains=term)[:10]  # Filter produk berdasarkan pencarian
+    data = [
+        {"id": product.product_id, "text": product.product_name, "volume" : product.volume, "price" : product.price} for product in products
+    ]
+    return JsonResponse({"results": data})
+
+def get_product_details(request):
+    product_id = request.GET.get('product_name')
+    try:
+        product = models.Product.objects.get(pk=product_id)
+        data = {
+            'volume': product.volume,
+            'price': product.price,
+        }
+        return JsonResponse(data)
+    except models.Product.DoesNotExist:
+        return JsonResponse({'error': 'Product not found'}, status=404)
 
 def product_create(request):
     if request.method == 'POST':
@@ -42,18 +67,18 @@ def product_create(request):
             return redirect('product_list')
         else:
             messages.error(request, "All fields are required.")
-    return render(request, 'products/product_form.html', {'form_action': 'Create'})
+    return render(request, 'products/new_products.html', {'form_action': 'Create'})
 
 def product_update_stock(request, pk):
     product = get_object_or_404(models.Product, pk=pk)  # Ambil produk berdasarkan primary key
-    suppliers = Supplier.objects.all()
+    suppliers = models.Supplier.objects.all()
     if request.method == 'POST':
         purchase_quantity = request.POST.get('purchase_quantity')
         supplier_id = request.POST.get('supplier')
         
         # Validasi input
         if purchase_quantity and int(purchase_quantity) > 0 and supplier_id:
-            supplier = get_object_or_404(models.Supplier, pk=supplier_id)  # Ambil supplier berdasarkan ID
+            supplier = get_object_or_404(models.Supplier, pk=supplier_id)
             
             # Tambahkan stok produk
             product.stock += int(purchase_quantity)
@@ -72,7 +97,7 @@ def product_update_stock(request, pk):
         else:
             messages.error(request, "All fields are required and purchase quantity must be a positive integer.")
     
-    return render(request, 'products/product_update_stock.html', {'product': product, 'suppliers': suppliers})
+    return render(request, 'products/products.html', {'product': product})
 
 def create_sales(request):
     if request.method == 'POST':
@@ -124,3 +149,4 @@ def create_sales(request):
 
     products = models.Product.objects.all()
     return render(request, 'inventory/sales_form.html', {'products': products})
+
