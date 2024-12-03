@@ -22,7 +22,7 @@
                     <label class="mb-2" for="product-volume">Product Volume: </label>
                     <div class="input-group">
                         <input type="number" id="product-volume" class="form-control border shadow-md" aria-label="Product Name Right" aria-describedby="inputGroup-sizing-sm">
-                        <span class="input-group-text">Kg</span>
+                        <span class="input-group-text">L</span>
                     </div>
                 </div>
             </div>
@@ -44,39 +44,63 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-6">
+              <div class="input-group input-group-sm mb-3 row">
+                  <label class="mb-2" for="product-volume">Safety Stock: </label>
+                  <div class="input-group">
+                      <input type="number" id="product-volume" class="form-control border shadow-md" aria-label="Product Name Right" aria-describedby="inputGroup-sizing-sm">
+                  </div>
+              </div>
+            </div>
 
+            <div class="col-md-6">
+                <div class="input-group input-group-sm mb-3 row">
+                    <label class="mb-2" for="product-volume">Supplier: </label>
+                    <div class="input-group">
+                        <input type="text" id="product-volume" class="form-control border shadow-md" aria-label="Product Name Right" aria-describedby="inputGroup-sizing-sm">
+                    </div>
+                </div>
+            </div>
             <div class="col-12">
-                <button type="button" class="btn btn-primary btn-lg">Submit</button>
+                <button type="button" class="btn btn-primary btn-lg">Buy</button>
             </div>
         </div>
     </div>
-    <div class="container pt-4">
-        <h2>Product List</h2>
-        <table id="product_id" class="table table-striped" style="width:100%">
-            <thead>
-                <tr>
-                    <th>Product Name</th>
-                    <th>Product Volume (Kg)</th>
-                    <th>Product Price (Rp)</th>
-                    <th>Product Stock</th>
-                    <th>Quantity</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for product in products %}
-                <tr>
-                    <td>{{ product.product_name }}</td>
-                    <td>{{ product.volume }}</td>
-                    <td>{{ product.price }}</td>
-                    <td>{{ product.stock }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4">No products available.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>    
+    <div class="card shadow mt-4 mb-4">
+        <div class="card-header py-3">
+            <h2>Product List</h2>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="product_id" class="table table-striped" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Product Volume (L)</th>
+                            <th>Product Price (Rp)</th>
+                            <th>Product Stock</th>
+                            <th>Stock</th>
+                            <th>Safety Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>{{ product.product_name }}</td>
+                            <td>{{ product.volume }}</td>
+                            <td>{{ product.price }}</td>
+                            <td>{{ product.stock }}</td>
+                            <td>{{ product.safety_stock }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4">No products available.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>    
+            </div>
+        </div>
     </div>
 </div>
 
@@ -87,13 +111,12 @@
 <script>
     $(document).ready(function() {
         $('#product_id').DataTable({
-            // Opsi tambahan bisa ditambahkan di sini
             "paging": true,
             "searching": true,
             "ordering": true,
             "info": true,
             "lengthChange": true,
-            "pageLength": 10 // Jumlah baris per halaman
+            "pageLength": 10  
         });
     });
 

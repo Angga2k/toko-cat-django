@@ -1,6 +1,109 @@
-<h1>Pembelian Baru</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Simpan</button>
-</form>
+{% extends "base/base.html" %}
+{% block content %}
+<div class="p-3">
+    <div>
+        <h2>Sales</h2>
+        <p>Input here to add a new sales😁</p>
+    </div>
+    <div class="container pt-4">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="input-group input-group-sm mb-3 row">
+                    <label class="mb-2" for="product-name">Product Name: </label>
+                    <div class="input-group">
+                        <input type="text" id="product-name" class="form-control border shadow-md" aria-label="Product Name" aria-describedby="inputGroup-sizing-sm">
+                    </div>
+                </div>
+            </div>
+        
+            <div class="col-md-6">
+                <div class="input-group input-group-sm mb-3 row">
+                    <label class="mb-2" for="product-volume">Product Volume: </label>
+                    <div class="input-group">
+                        <input type="number" id="product-volume" class="form-control border shadow-md" aria-label="Product Name Right" aria-describedby="inputGroup-sizing-sm">
+                        <span class="input-group-text">L</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="input-group input-group-sm mb-3 row">
+                    <label class="mb-2" for="product-volume">Product Price: </label>
+                    <div class="input-group">
+                        <span class="input-group-text">Rp</span>
+                        <input type="number" id="product-volume" class="form-control border shadow-md" aria-label="Product Name Right" aria-describedby="inputGroup-sizing-sm">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm mb-3 row">
+                    <label class="mb-2" for="product-volume">Quantity: </label>
+                    <div class="input-group">
+                        <input type="number" id="product-volume" class="form-control border shadow-md" aria-label="Product Name Right" aria-describedby="inputGroup-sizing-sm">
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <button type="button" class="btn btn-primary btn-lg">Sell</button>
+            </div>
+        </div>
+    </div>
+    <div class="card shadow mt-4 mb-4">
+        <div class="card-header py-3">
+            <h2>Product List</h2>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="product_id" class="table table-striped" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Product Volume (L)</th>
+                            <th>Product Price (Rp)</th>
+                            <th>Product Stock</th>
+                            <th>Stock</th>
+                            <th>Safety Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>{{ product.product_name }}</td>
+                            <td>{{ product.volume }}</td>
+                            <td>{{ product.price }}</td>
+                            <td>{{ product.stock }}</td>
+                            <td>{{ product.safety_stock }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4">No products available.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>    
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/2.1.8/js/dataTables.js"></script>
+<script src="https://cdn.datatables.net/2.1.8/css/dataTables.bootstrap5.css"></script>
+<script>
+    $(document).ready(function() {
+        $('#product_id').DataTable({
+            // Opsi tambahan bisa ditambahkan di sini
+            "paging": true,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "lengthChange": true,
+            "pageLength": 10 // Jumlah baris per halaman
+        });
+    });
+
+    // new DataTable('TokoCat')
+</script>
+{% endblock content %}
